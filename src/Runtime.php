@@ -69,6 +69,8 @@ class Runtime
 
     /**
      * 快速执行
+     *
+     * 该方法下父子Runtime没有优先级区分，除非自行设置，否则始终为0
      * @param Closure $child = function(Runtime){}
      * @param Closure|null $parent = function(Runtime){}
      * @param int $forkCount
@@ -128,10 +130,10 @@ class Runtime
     /**
      * 创建一个子Runtime
      * @param Closure $handler = function(Runtime){}
-     * @param bool $priority 是否设置优先级
+     * @param int $priority 默认 父子Runtime同为0，但父Runtime始终为0
      * @return void
      */
-    public function fork(Closure $handler, bool $priority = false): void
+    public function fork(Closure $handler, int $priority = 0): void
     {
         if($id = $this->number()){
             $pid = pcntl_fork(); # 此代码往后就是父子进程公用代码块
@@ -139,16 +141,12 @@ class Runtime
                 switch (true){
                     case $pid > 0:
                         $this->_id = 0;
-                        if($priority){
-                            $this->setPriority(0, -1);
-                        }
+                        $this->setPriority(0, 0);
                         $this->_pidMap[$id] = $pid;
                         break;
                     case $pid === 0:
                         $this->_id = $id;
-                        if($priority){
-                            $this->setPriority($id, 0);
-                        }
+                        $this->setPriority($id, $priority);
                         $this->_pidMap = [];
                         $handler($this);
                         break;
