@@ -15,35 +15,29 @@ class Runtime
     /** @var int 数目 */
     protected int $_number = 1;
 
-    /** @var array 子进程PID字典 在子进程内始终为[] */
+    /** @var array 子Runtime PID字典 在子Runtime内始终为[] */
     protected array $_pidMap = [];
 
     /**
-     * @return int
+     * 返回编号/数量
+     * @param bool $increment 自增
+     * @return int 子Runtime会固定返回0
      */
-    public function number(): int
+    public function number(bool $increment = true): int
     {
         if(!$this->isChild()){
-            return $this->_number ++;
+            return $increment ? $this->_number ++ : $this->_number;
         }
         return 0;
     }
+
     /**
-     * 获取process序号
+     * 获取当前Runtime序号
      * @return int
      */
     public function getId(): int
     {
         return $this->_id;
-    }
-
-    /**
-     * 设置process序号
-     * @param int $id
-     */
-    public function setId(int $id): void
-    {
-        $this->_id = $id;
     }
 
     /**
@@ -56,7 +50,7 @@ class Runtime
     }
 
     /**
-     * 获取子进程pid字典
+     * 获取所有子Runtime的PID
      * @return array
      */
     public function getPidMap(): array
@@ -65,7 +59,7 @@ class Runtime
     }
 
     /**
-     * 是否是子进程
+     * 是否是子Runtime
      * @return bool
      */
     public function isChild(): bool
@@ -74,9 +68,9 @@ class Runtime
     }
 
     /**
-     * 快速运行
-     * @param Closure $child
-     * @param Closure|null $parent
+     * 快速执行
+     * @param Closure $child = function(Runtime){}
+     * @param Closure|null $parent = function(Runtime){}
      * @param int $forkCount
      * @return void
      */
@@ -94,11 +88,12 @@ class Runtime
     }
 
     /**
-     * @param Closure|null $success = function($this, $status){}
-     * @param Closure|null $error = function($this, $status){}
+     * 父Runtime 监听
+     * @param Closure|null $success = function(Runtime, status){}
+     * @param Closure|null $error = function(Runtime, status){}
      * @return void
      */
-    public function wait(?Closure $success = null, ?Closure $error = null)
+    public function wait(?Closure $success = null, ?Closure $error = null): void
     {
         if(!$this->isChild()){
             foreach ($this->_pidMap as $pid){
@@ -119,11 +114,11 @@ class Runtime
     }
 
     /**
-     * 主进程执行
-     * @param Closure|null $handler
+     * 父Runtime执行
+     * @param Closure|null $handler = function(Runtime){}
      * @return void
      */
-    public function parent(?Closure $handler = null)
+    public function parent(?Closure $handler = null): void
     {
         if(!$this->isChild() and $handler){
             $handler($this);
@@ -131,23 +126,30 @@ class Runtime
     }
 
     /**
-     * 创建一个子进程
-     * @param Closure $handler
+     * 创建一个子Runtime
+     * @param Closure $handler = function(Runtime){}
+     * @param bool $priority 是否设置优先级
      * @return void
      */
-    public function fork(Closure $handler)
+    public function fork(Closure $handler, bool $priority = false): void
     {
         if($id = $this->number()){
             $pid = pcntl_fork(); # 此代码往后就是父子进程公用代码块
             try {
                 switch (true){
                     case $pid > 0:
-                        $this->setId(0);
+                        $this->_id = 0;
+                        if($priority){
+                            $this->setPriority(0, -1);
+                        }
                         $this->_pidMap[$id] = $pid;
                         break;
                     case $pid === 0:
-                        $this->setId($id);
-                        $this->_pidMap[$id] = posix_getpid();
+                        $this->_id = $id;
+                        if($priority){
+                            $this->setPriority($id, 0);
+                        }
+                        $this->_pidMap = [];
                         $handler($this);
                         break;
                     default:
@@ -158,5 +160,31 @@ class Runtime
                 exit(250);
             }
         }
+    }
+
+    /**
+     * 为Runtime设置优先级
+     * @param int $id Runtime序号 0为主进程
+     * @param int $priority 优先级 -20至20 越小优先级越高
+     * @return void
+     */
+    public function setPriority(int $id, int $priority): void
+    {
+        if($this->getId() === $id){
+            pcntl_setpriority($priority);
+        }
+    }
+
+    /**
+     * 获取Runtime优先级
+     * @param int $id Runtime序号 0为主进程
+     * @return int|null -20至20 越小优先级越高
+     */
+    public function getPriority(int $id): ?int
+    {
+        if($this->getId() === $id){
+            return ($priority = pcntl_getpriority()) === false ? null : $priority;
+        }
+        return null;
     }
 }
