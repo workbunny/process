@@ -143,3 +143,18 @@ $p->fork(function(\WorkBunny\Process\Runtime $runtime){
 });
 # run 方法同理
 ```
+
+# 方法
+
+|      方法名      |   作用范围   | 是否产生分叉 |               描述               |
+|:-------------:|:--------:|:------:|:------------------------------:|
+|    fork()     | 父Runtime |   √    |          分叉一个子Runtime          |
+|     run()     | 父Runtime |   √    |         快速分支N个子Runtime         |
+|    wait()     | 父Runtime |   ×    |         监听所有子Runtime状态         |
+|   parent()    | 父Runtime |   ×    |        为父Runtime增加回调响应         |
+|   isChild()   |    所有    |   ×    |         判断是否是子Runtime          |
+|    getId()    |    所有    |   ×    |         获取当前Runtime序号          |
+|  getPidMap()  | 父Runtime |   ×    |        获取所有子RuntimePID         |
+|   number()    | 父Runtime |   ×    | 获取子Runtime数量 or 产生子Runtime自增序号 |
+| setPriority() |    所有    |   ×    |        为当前Runtime设置优先级         |
+| getPriority() |    所有    |   ×    |         获取当前Runtime优先级         |
