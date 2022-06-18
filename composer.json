@@ -1,0 +1,44 @@
+{
+  "name": "workbunny/process",
+  "type": "library",
+  "keywords": [
+    "multi-process",
+    "process",
+    "pcntl_fork"
+  ],
+  "homepage": "https://github.com/process",
+  "license": "MIT",
+  "description": "A lightweight multi-process helper base on PHP. ",
+  "authors": [
+    {
+      "name": "chaz6chez",
+      "email": "250220719@qq.com",
+      "homepage": "https://chaz6chez.cn",
+      "role": "Developer"
+    }
+  ],
+  "support": {
+    "email": "250220719@qq.com",
+    "issues": "https://github.com/workbuunny/process/issues",
+    "source": "https://github.com/workbuunny/process"
+  },
+  "require": {
+    "php": ">=7.4",
+    "ext-pcntl": "*",
+    "ext-posix": "*"
+  },
+  "require-dev": {
+    "symfony/var-dumper": "^5.0",
+    "phpunit/phpunit": "^9.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "WorkBunny\\Process\\": "src"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests"
+    }
+  }
+}
