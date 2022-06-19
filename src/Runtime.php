@@ -29,7 +29,7 @@ class Runtime
 
     /**
      * @param array $config = [
-     *  'pre_gc'   => true, // 是否在fork前执行php garbage cycle
+     *  'pre_gc'   => true, // 是否在fork前执行php garbage cycle，默认为false
      *
      *  'priority' => [0,1,1,2,3], // 设置默认的Runtime优先级，如果创建Runtime数量大于该配置数量，默认为0
      * ]

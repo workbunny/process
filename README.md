@@ -9,9 +9,9 @@
 
 这是一个基于ext-pcntl和ext-posix拓展的PHP多进程助手，用于更方便的调用使用。
 
-# 示例
+# 快速开始
 
-- 在当前上下文中创建一个子进程，如下：
+- 创建一个子Runtime
 
 ```php
 // 使用对象方式
@@ -21,7 +21,7 @@ $p->fork(function(){
 });
 ```
 
-- 父进程执行
+- 父Runtime执行
 
 ```php
 $p = new \WorkBunny\Process\Runtime();
@@ -32,7 +32,7 @@ $p->parent(function(){
 
 ```
 
-- 快速创建运行多个进程
+- 快速创建运行多个子Runtime
 
 ```php
 $p = new \WorkBunny\Process\Runtime();
@@ -45,7 +45,7 @@ $p->run(function(){
 
 ```
 
-- 父进程等待子进程
+- 监听子Runtime
 
 ```php
 $p = new \WorkBunny\Process\Runtime();
@@ -57,7 +57,47 @@ $p->wait(function(\WorkBunny\Process\Runtime $parent, int $status){
 });
 ```
 
+# 方法
+
+**注：作用范围为父Runtime的方法仅在父Runtime内有有效响应**
+
+|      方法名      |   作用范围   | 是否产生分叉 |              描述               |
+|:-------------:|:--------:|:------:|:-----------------------------:|
+|    fork()     | 父Runtime |   √    |         分叉一个子Runtime          |
+|     run()     | 父Runtime |   √    |        快速分支N个子Runtime         |
+|    wait()     | 父Runtime |   ×    |        监听所有子Runtime状态         |
+|   parent()    | 父Runtime |   ×    |        为父Runtime增加回调响应        |
+|   isChild()   |    所有    |   ×    |         判断是否是子Runtime         |
+|    getId()    |    所有    |   ×    |         获取当前Runtime序号         |
+|   getPid()    |    所有    |   ×    |        获取当前RuntimePID         |
+|  getPidMap()  | 父Runtime |   ×    |        获取所有子RuntimePID        |
+|   number()    | 父Runtime |   ×    | 获取Runtime数量 or 产生子Runtime自增序号 |
+| setPriority() |    所有    |   ×    |        为当前Runtime设置优先级        |
+| getPriority() |    所有    |   ×    |        获取当前Runtime优先级         |
+
 # 说明
+
+## 1. 初始化
+
+- Runtime对象初始化支持配置
+  - pre_gc ：接受bool值，控制Runtime在fork行为发生前是否执行PHP GC；**注：Runtime默认不进行gc**
+  - priority：接受索引数组，为所有Runtime设置优先级，索引下标对应Runtime序号；
+如实际产生的Runtime数量大于该索引数组数量，则默认为0；
+**注：fork()的priority参数会改变该默认值**
+
+```php
+$p = new \WorkBunny\Process\Runtime([
+    'pre_gc' => true,
+    'priority' => [
+        0,  // 主Runtime优先级为0
+        -1, // id=1的子Runtime优先级为-1
+        -2, // id=2的子Runtime优先级为-2
+        -3  // id=3的子Runtime优先级为-3
+    ]
+]);
+```
+
+## 2. fork行为
 
 - 在 **fork** 行为发生后，Runtime对象会产生两个分支
   - id=0 的父Runtime
@@ -86,6 +126,71 @@ $p->run(function (\WorkBunny\Process\Runtime $runtime){
 var_dump('parent'); # 打印5次
 ```
 
+- 如需在子Runtime中进行 **fork** 操作，请创建新的Runtime；**不建议过多调用，因为进程的开销远比线程大**
+
+```php
+$p = new \WorkBunny\Process\Runtime();
+$p->fork(function(\WorkBunny\Process\Runtime $runtime){
+    var_dump($runtime->getId()); # id !== 0
+    var_dump('old-child');
+    
+    $newP = new \WorkBunny\Process\Runtime();
+    $newP->fork(function(\WorkBunny\Process\Runtime $newP){
+        var_dump($newP->getId()); # id === 0
+        var_dump('new-parent');
+    });
+});
+# run 方法同理
+```
+
+## 3. 指定执行
+
+- 指定某个id的Runtime执行
+
+```php
+$p = new \WorkBunny\Process\Runtime();
+$p->run(function (){},function(){}, 4);
+
+if($p->getId() === 3){
+    var_dump('im No. 3'); # 仅id为3的Runtime会生效
+}
+
+# fork同理
+```
+
+- 指定所有子Runtime执行
+
+```php
+$p = new \WorkBunny\Process\Runtime();
+$p->run(function (){},function(){}, 4);
+
+if($p->isChild()){
+    var_dump('im child'); # 所有子Runtime都生效
+}
+
+# fork同理
+```
+
+- 指定父Runtime执行
+
+```php
+$p = new \WorkBunny\Process\Runtime();
+$p->run(function (){},function(){}, 4);
+
+if(!$p->isChild()){
+    var_dump('im parent'); # 父Runtime都生效
+}
+
+# 或以注册回调函数来执行
+$p->parent(function(\WorkBunny\Process\Runtime $parent){
+    var_dump('im parent');
+});
+
+# fork同理
+```
+
+## 4. 回调函数相关
+
 - 所有注册的回调函数都可以接收当前的Runtime分支对象：
 
 ```php
@@ -104,7 +209,7 @@ $p->run(function (\WorkBunny\Process\Runtime $runtime){
 }, 4);
 ```
 
-- Runtime中的所有方法仅对父Runtime生效:
+- **注：注册的父Runtime回调函数内传入的是父Runtime对象，注册的子Runtime回调函数内传入的参数是子Runtime对象**
 
 ```php
 $p = new \WorkBunny\Process\Runtime();
@@ -112,7 +217,7 @@ $p->fork(function(\WorkBunny\Process\Runtime $runtime){
     var_dump('child'); # 生效
     
     $runtime->fork(function(){
-        var_dump('child-child'); # 不生效
+        var_dump('child-child'); # 由于fork作用范围为父Runtime，所以不生效
     });
 });
 
@@ -127,35 +232,37 @@ $p->parent(function (\WorkBunny\Process\Runtime $runtime){
 # run 方法同理
 ```
 
-- 如需在子Runtime中进行 **fork** 操作，请创建新的Runtime；**不建议过多调用，因为进程的开销远比线程大**
+## 5. 其他
+
+- 获取当前Runtime数量
+
+**注：该方法仅父Runtime生效**
 
 ```php
 $p = new \WorkBunny\Process\Runtime();
-$p->fork(function(\WorkBunny\Process\Runtime $runtime){
-    var_dump($runtime->getId()); # id !== 0
-    var_dump('old-child');
-    
-    $newP = new \WorkBunny\Process\Runtime();
-    $newP->fork(function(\WorkBunny\Process\Runtime $newP){
-        var_dump($newP->getId()); # id === 0
-        var_dump('new-parent');
-    });
-});
-# run 方法同理
+var_dump($p->number(false)); # 仅父Runtime会输出
 ```
 
-# 方法
+- 获取当前RuntimePID
 
-|      方法名      |   作用范围   | 是否产生分叉 |               描述               |
-|:-------------:|:--------:|:------:|:------------------------------:|
-|    fork()     | 父Runtime |   √    |          分叉一个子Runtime          |
-|     run()     | 父Runtime |   √    |         快速分支N个子Runtime         |
-|    wait()     | 父Runtime |   ×    |         监听所有子Runtime状态         |
-|   parent()    | 父Runtime |   ×    |        为父Runtime增加回调响应         |
-|   isChild()   |    所有    |   ×    |         判断是否是子Runtime          |
-|    getId()    |    所有    |   ×    |         获取当前Runtime序号          |
-|   getPid()    |    所有    |   ×    |         获取当前RuntimePID         |
-|  getPidMap()  | 父Runtime |   ×    |        获取所有子RuntimePID         |
-|   number()    | 父Runtime |   ×    | 获取子Runtime数量 or 产生子Runtime自增序号 |
-| setPriority() |    所有    |   ×    |        为当前Runtime设置优先级         |
-| getPriority() |    所有    |   ×    |         获取当前Runtime优先级         |
+**注：该方法可结合指定执行区别获取**
+
+```php
+$p = new \WorkBunny\Process\Runtime();
+var_dump($p->getPid()); # 所有Runtime会输出
+```
+
+- 阻塞监听
+
+**注：该方法仅父Runtime生效**
+
+**注：该方法在会阻塞至所有子Runtime退出**
+
+```php
+$p = new \WorkBunny\Process\Runtime();
+$p->wait(function(\WorkBunny\Process\Runtime $runtime, $status){
+    # 子Runtime正常退出时
+}, function(\WorkBunny\Process\Runtime $runtime, $status){
+    # 子Runtime异常退出时
+});
+```
