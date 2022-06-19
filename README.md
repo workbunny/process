@@ -154,6 +154,7 @@ $p->fork(function(\WorkBunny\Process\Runtime $runtime){
 |   parent()    | 父Runtime |   ×    |        为父Runtime增加回调响应         |
 |   isChild()   |    所有    |   ×    |         判断是否是子Runtime          |
 |    getId()    |    所有    |   ×    |         获取当前Runtime序号          |
+|   getPid()    |    所有    |   ×    |         获取当前RuntimePID         |
 |  getPidMap()  | 父Runtime |   ×    |        获取所有子RuntimePID         |
 |   number()    | 父Runtime |   ×    | 获取子Runtime数量 or 产生子Runtime自增序号 |
 | setPriority() |    所有    |   ×    |        为当前Runtime设置优先级         |

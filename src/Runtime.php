@@ -12,6 +12,9 @@ class Runtime
     /** @var int 序号 */
     protected int $_id = 0;
 
+    /** @var int PID */
+    protected int $_pid = 0;
+
     /** @var int 数目 */
     protected int $_number = 1;
 
@@ -19,16 +22,30 @@ class Runtime
     protected array $_pidMap = [];
 
     /**
-     * 返回编号/数量
-     * @param bool $increment 自增
-     * @return int 子Runtime会固定返回0
+     * @see Runtime::__construct
+     * @var array 配置
      */
-    public function number(bool $increment = true): int
+    protected array $_config = [];
+
+    /**
+     * @param array $config = [
+     *  'pre_gc'   => true, // 是否在fork前执行php garbage cycle
+     *
+     *  'priority' => [0,1,1,2,3], // 设置默认的Runtime优先级，如果创建Runtime数量大于该配置数量，默认为0
+     * ]
+     */
+    public function __construct(array $config = [])
     {
-        if(!$this->isChild()){
-            return $increment ? $this->_number ++ : $this->_number;
-        }
-        return 0;
+        $this->_config = $config;
+    }
+
+    /**
+     * @see Runtime::__construct
+     * @return array
+     */
+    public function getConfig(): array
+    {
+        return $this->_config;
     }
 
     /**
@@ -38,6 +55,15 @@ class Runtime
     public function getId(): int
     {
         return $this->_id;
+    }
+
+    /**
+     * 获取当前Runtime PID
+     * @return int
+     */
+    public function getPid(): int
+    {
+        return $this->_pid;
     }
 
     /**
@@ -65,6 +91,19 @@ class Runtime
     public function isChild(): bool
     {
         return $this->getId() !== 0;
+    }
+
+    /**
+     * 返回编号/数量
+     * @param bool $increment 自增
+     * @return int 子Runtime会固定返回0
+     */
+    public function number(bool $increment = true): int
+    {
+        if(!$this->isChild()){
+            return $increment ? $this->_number ++ : $this->_number;
+        }
+        return 0;
     }
 
     /**
@@ -136,20 +175,40 @@ class Runtime
     public function fork(Closure $handler, int $priority = 0): void
     {
         if($id = $this->number()){
+            // gc
+            if(isset($this->getConfig()['pre_gc']) and boolval($this->getConfig()['pre_gc'])){
+                gc_collect_cycles();
+            }
+            // fork
             $pid = pcntl_fork(); # 此代码往后就是父子进程公用代码块
             try {
                 switch (true){
+                    // 父Runtime
                     case $pid > 0:
                         $this->_id = 0;
-                        $this->setPriority(0, 0);
+                        $this->_pid = posix_getpid();
+                        $this->setPriority(
+                            0,
+                            isset($this->getConfig()['priority'][0])
+                                ? (int)($this->getConfig()['priority'][0])
+                                : 0
+                        );
                         $this->_pidMap[$id] = $pid;
                         break;
+                    // 子Runtime
                     case $pid === 0:
                         $this->_id = $id;
-                        $this->setPriority($id, $priority);
+                        $this->_pid = posix_getpid();
+                        $this->setPriority(
+                            $id,
+                            isset($this->getConfig()['priority'][$id])
+                                ? (int)($this->getConfig()['priority'][$id])
+                                : $priority
+                        );
                         $this->_pidMap = [];
                         $handler($this);
                         break;
+                    // 异常
                     default:
                         throw new RuntimeException('Fork process fail. ');
                 }
