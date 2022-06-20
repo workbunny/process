@@ -5,6 +5,8 @@
 
 **<p align='center'>🐇 A lightweight multi-process helper base on PHP. 🐇</p>**
 
+[![Latest Stable Version](http://poser.pugx.org/workbunny/process/v)](https://packagist.org/packages/workbunny/process) [![Total Downloads](http://poser.pugx.org/workbunny/process/downloads)](https://packagist.org/packages/workbunny/process) [![Latest Unstable Version](http://poser.pugx.org/workbunny/process/v/unstable)](https://packagist.org/packages/workbunny/process) [![License](http://poser.pugx.org/workbunny/process/license)](https://packagist.org/packages/workbunny/process) [![PHP Version Require](http://poser.pugx.org/workbunny/process/require/php)](https://packagist.org/packages/workbunny/process)
+
 # 简介
 
 这是一个基于ext-pcntl和ext-posix拓展的PHP多进程助手，用于更方便的调用使用。
