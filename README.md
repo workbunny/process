@@ -63,19 +63,22 @@ $p->wait(function(\WorkBunny\Process\Runtime $parent, int $status){
 
 **注：作用范围为父Runtime的方法仅在父Runtime内有有效响应**
 
-|      方法名      |   作用范围   | 是否产生分叉 |              描述               |
-|:-------------:|:--------:|:------:|:-----------------------------:|
-|    fork()     | 父Runtime |   √    |         分叉一个子Runtime          |
-|     run()     | 父Runtime |   √    |        快速分支N个子Runtime         |
-|    wait()     | 父Runtime |   ×    |        监听所有子Runtime状态         |
-|   parent()    | 父Runtime |   ×    |        为父Runtime增加回调响应        |
-|   isChild()   |    所有    |   ×    |         判断是否是子Runtime         |
-|    getId()    |    所有    |   ×    |         获取当前Runtime序号         |
-|   getPid()    |    所有    |   ×    |        获取当前RuntimePID         |
-|  getPidMap()  | 父Runtime |   ×    |        获取所有子RuntimePID        |
-|   number()    | 父Runtime |   ×    | 获取Runtime数量 or 产生子Runtime自增序号 |
-| setPriority() |    所有    |   ×    |        为当前Runtime设置优先级        |
-| getPriority() |    所有    |   ×    |        获取当前Runtime优先级         |
+|      方法名      |    作用范围    | 是否产生分叉 |                   描述                    |
+|:-------------:|:----------:|:------:|:---------------------------------------:|
+|    fork()     |  父Runtime  |   √    |              分叉一个子Runtime               |
+|     run()     |  父Runtime  |   √    |             快速分叉N个子Runtime              |
+|    wait()     |  父Runtime  |   ×    |             监听所有子Runtime状态              |
+|   parent()    |  父Runtime  |   ×    |             为父Runtime增加回调响应             |
+|   isChild()   |     所有     |   ×    |              判断是否是子Runtime              |
+|    getId()    |     所有     |   ×    |              获取当前Runtime序号              |
+|   getPid()    |     所有     |   ×    |             获取当前RuntimePID              |
+|  getPidMap()  |  父Runtime  |   ×    |             获取所有子RuntimePID             |
+|   number()    |  父Runtime  |   ×    |      获取Runtime数量 or 产生子Runtime自增序号      |
+|  setConfig()  | 所有 且 分叉发生前 |   ×    |                设置config                 |
+|  getConfig()  |     所有     |   ×    |                获取config                 |
+|  getPidMap()  |  父Runtime  |   ×    |             获取所有子RuntimePID             |
+| setPriority() |     所有     |   ×    | 为当前Runtime设置优先级 **需要当前执行用户为super user** |
+| getPriority() |     所有     |   ×    |             获取当前Runtime优先级              |
 
 # 说明
 

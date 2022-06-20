@@ -41,6 +41,16 @@ class Runtime
 
     /**
      * @see Runtime::__construct
+     * @param array $config
+     * @return void
+     */
+    public function setConfig(array $config): void
+    {
+        $this->_config = $config;
+    }
+
+    /**
+     * @see Runtime::__construct
      * @return array
      */
     public function getConfig(): array
@@ -228,7 +238,7 @@ class Runtime
     public function setPriority(int $id, int $priority): void
     {
         if($this->getId() === $id){
-            pcntl_setpriority($priority);
+            @pcntl_setpriority($priority);
         }
     }
 
