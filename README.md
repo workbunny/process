@@ -13,6 +13,10 @@
 
 # 快速开始
 
+```
+composer require workbunny/process
+```
+
 - 创建一个子Runtime
 
 ```php
