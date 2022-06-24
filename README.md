@@ -83,6 +83,7 @@ $p->wait(function(\WorkBunny\Process\Runtime $parent, int $status){
 |  getPidMap()  |  父Runtime  |   ×    |             获取所有子RuntimePID             |
 | setPriority() |     所有     |   ×    | 为当前Runtime设置优先级 **需要当前执行用户为super user** |
 | getPriority() |     所有     |   ×    |             获取当前Runtime优先级              |
+|    exit()     |     所有     |   ×    |                  进程退出                   |
 
 # 说明
 
@@ -92,7 +93,10 @@ $p->wait(function(\WorkBunny\Process\Runtime $parent, int $status){
   - pre_gc ：接受bool值，控制Runtime在fork行为发生前是否执行PHP GC；**注：Runtime默认不进行gc**
   - priority：接受索引数组，为所有Runtime设置优先级，索引下标对应Runtime序号；
 如实际产生的Runtime数量大于该索引数组数量，则默认为0；
+
 **注：fork()的priority参数会改变该默认值**
+
+**注：priority需要当前用户为super user**
 
 ```php
 $p = new \WorkBunny\Process\Runtime([
@@ -274,4 +278,14 @@ $p->wait(function(\WorkBunny\Process\Runtime $runtime, $status){
 }, function(\WorkBunny\Process\Runtime $runtime, $status){
     # 子Runtime异常退出时
 });
+```
+
+- 进程退出
+
+**注：该方法可结合指定执行区别获取**
+
+```php
+$p = new \WorkBunny\Process\Runtime();
+
+$p->exit(0, 'success');
 ```

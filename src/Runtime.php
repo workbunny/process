@@ -117,6 +117,18 @@ class Runtime
     }
 
     /**
+     * @param int $status
+     * @param string|null $msg
+     * @return void
+     */
+    public function exit(int $status = 0, ?string $msg = null){
+        if($msg){
+            echo $msg . PHP_EOL;
+        }
+        exit($status);
+    }
+
+    /**
      * 快速执行
      *
      * 该方法下父子Runtime没有优先级区分，除非自行设置，否则始终为0
