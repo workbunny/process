@@ -5,7 +5,21 @@
 
 **<p align='center'>🐇 A lightweight multi-process helper base on PHP. 🐇</p>**
 
-[![Latest Stable Version](http://poser.pugx.org/workbunny/process/v)](https://packagist.org/packages/workbunny/process) [![Total Downloads](http://poser.pugx.org/workbunny/process/downloads)](https://packagist.org/packages/workbunny/process) [![Latest Unstable Version](http://poser.pugx.org/workbunny/process/v/unstable)](https://packagist.org/packages/workbunny/process) [![License](http://poser.pugx.org/workbunny/process/license)](https://packagist.org/packages/workbunny/process) [![PHP Version Require](http://poser.pugx.org/workbunny/process/require/php)](https://packagist.org/packages/workbunny/process)
+<div align="center">
+    <a href="https://github.com/workbunny/process/actions">
+        <img src="https://github.com/workbunny/process/actions/workflows/CI.yml/badge.svg" alt="Build Status">
+    </a>
+    <a href="https://github.com/workbunny/process/releases">
+        <img alt="Latest Stable Version" src="http://poser.pugx.org/workbunny/process/v">
+    </a>
+    <a href="https://github.com/workbunny/process/blob/main/composer.json">
+        <img alt="PHP Version Require" src="http://poser.pugx.org/workbunny/process/require/php">
+    </a>
+    <a href="https://github.com/workbunny/process/blob/main/LICENSE">
+        <img alt="GitHub license" src="http://poser.pugx.org/workbunny/process/license">
+    </a>
+    
+</div>
 
 # 简介
 
