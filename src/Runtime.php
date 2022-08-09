@@ -6,8 +6,8 @@
  *
  * @author    chaz6chez<250220719@qq.com>
  * @copyright chaz6chez<250220719@qq.com>
- * @link      https://github.com/workbunny/event-loop
- * @license   https://github.com/workbunny/event-loop/blob/main/LICENSE
+ * @link      https://github.com/workbunny/process
+ * @license   https://github.com/workbunny/process/blob/main/LICENSE
  */
 declare(strict_types=1);
 
