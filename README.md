@@ -36,7 +36,7 @@ composer require workbunny/process
 ```php
 // 使用对象方式
 $p = new \WorkBunny\Process\Runtime();
-$p->fork(function(){
+$p->child(function(){
     var_dump('child');
 });
 ```
@@ -81,23 +81,23 @@ $p->wait(function(\WorkBunny\Process\Runtime $parent, int $status){
 
 **注：作用范围为父Runtime的方法仅在父Runtime内有有效响应**
 
-|      方法名      |    作用范围    | 是否产生分叉 |                   描述                    |
-|:-------------:|:----------:|:------:|:---------------------------------------:|
-|    fork()     |  父Runtime  |   √    |              分叉一个子Runtime               |
-|     run()     |  父Runtime  |   √    |             快速分叉N个子Runtime              |
-|    wait()     |  父Runtime  |   ×    |             监听所有子Runtime状态              |
-|   parent()    |  父Runtime  |   ×    |             为父Runtime增加回调响应             |
-|   isChild()   |     所有     |   ×    |              判断是否是子Runtime              |
-|    getId()    |     所有     |   ×    |              获取当前Runtime序号              |
-|   getPid()    |     所有     |   ×    |             获取当前RuntimePID              |
-|  getPidMap()  |  父Runtime  |   ×    |             获取所有子RuntimePID             |
-|   number()    |  父Runtime  |   ×    |      获取Runtime数量 or 产生子Runtime自增序号      |
-|  setConfig()  | 所有 且 分叉发生前 |   ×    |                设置config                 |
-|  getConfig()  |     所有     |   ×    |                获取config                 |
-|  getPidMap()  |  父Runtime  |   ×    |             获取所有子RuntimePID             |
-| setPriority() |     所有     |   ×    | 为当前Runtime设置优先级 **需要当前执行用户为super user** |
-| getPriority() |     所有     |   ×    |             获取当前Runtime优先级              |
-|    exit()     |     所有     |   ×    |                  进程退出                   |
+|      方法名      |     作用范围      | 是否产生分叉 |                   描述                    |
+|:-------------:|:-------------:|:------:|:---------------------------------------:|
+|    child()    | parentContext |   √    |              分叉一个子Runtime               |
+|     run()     | parentContext |   √    |             快速分叉N个子Runtime              |
+|    wait()     | parentContext |   ×    |             监听所有子Runtime状态              |
+|   parent()    | parentContext |   ×    |             为父Runtime增加回调响应             |
+|   isChild()   |    public     |   ×    |              判断是否是子Runtime              |
+|    getId()    |    public     |   ×    |              获取当前Runtime序号              |
+|   getPid()    |    public     |   ×    |             获取当前RuntimePID              |
+|  getPidMap()  | parentContext |   ×    |             获取所有子RuntimePID             |
+|   number()    | parentContext |   ×    |      获取Runtime数量 or 产生子Runtime自增序号      |
+|  setConfig()  |    public     |   ×    |                设置config                 |
+|  getConfig()  |    public     |   ×    |                获取config                 |
+|  getPidMap()  | parentContext |   ×    |             获取所有子RuntimePID             |
+| setPriority() |    public     |   ×    | 为当前Runtime设置优先级 **需要当前执行用户为super user** |
+| getPriority() |    public     |   ×    |             获取当前Runtime优先级              |
+|    exit()     |    public     |   ×    |                  进程退出                   |
 
 # 说明
 
@@ -108,7 +108,7 @@ $p->wait(function(\WorkBunny\Process\Runtime $parent, int $status){
   - priority：接受索引数组，为所有Runtime设置优先级，索引下标对应Runtime序号；
 如实际产生的Runtime数量大于该索引数组数量，则默认为0；
 
-**注：fork()的priority参数会改变该默认值**
+**注：child()的priority参数会改变该默认值**
 
 **注：priority需要当前用户为super user**
 
@@ -130,11 +130,11 @@ $p = new \WorkBunny\Process\Runtime([
   - id=0 的父Runtime
   - id=N 的子Runtime
 
-- **fork()** 和 **run()** 之后的代码域会被父子进程同时执行，但相互隔离：
+- **child()** 和 **run()** 之后的代码域会被父子进程同时执行，但相互隔离：
 
 ```php
 $p = new \WorkBunny\Process\Runtime();
-$p->fork(function(\WorkBunny\Process\Runtime $runtime){
+$p->child(function(\WorkBunny\Process\Runtime $runtime){
     var_dump($runtime->getId()); # id !== 0
 });
 
@@ -157,12 +157,12 @@ var_dump('parent'); # 打印5次
 
 ```php
 $p = new \WorkBunny\Process\Runtime();
-$p->fork(function(\WorkBunny\Process\Runtime $runtime){
+$p->child(function(\WorkBunny\Process\Runtime $runtime){
     var_dump($runtime->getId()); # id !== 0
     var_dump('old-child');
     
     $newP = new \WorkBunny\Process\Runtime();
-    $newP->fork(function(\WorkBunny\Process\Runtime $newP){
+    $newP->child(function(\WorkBunny\Process\Runtime $newP){
         var_dump($newP->getId()); # id === 0
         var_dump('new-parent');
     });
@@ -222,7 +222,7 @@ $p->parent(function(\WorkBunny\Process\Runtime $parent){
 
 ```php
 $p = new \WorkBunny\Process\Runtime();
-$p->fork(function(\WorkBunny\Process\Runtime $runtime){
+$p->child(function(\WorkBunny\Process\Runtime $runtime){
     var_dump($runtime->getId()); # id !== 0
 });
 $p->parent(function (\WorkBunny\Process\Runtime $runtime){
@@ -240,10 +240,10 @@ $p->run(function (\WorkBunny\Process\Runtime $runtime){
 
 ```php
 $p = new \WorkBunny\Process\Runtime();
-$p->fork(function(\WorkBunny\Process\Runtime $runtime){
+$p->child(function(\WorkBunny\Process\Runtime $runtime){
     var_dump('child'); # 生效
     
-    $runtime->fork(function(){
+    $runtime->child(function(){
         var_dump('child-child'); # 由于fork作用范围为父Runtime，所以不生效
     });
 });
@@ -251,7 +251,7 @@ $p->fork(function(\WorkBunny\Process\Runtime $runtime){
 $p->parent(function (\WorkBunny\Process\Runtime $runtime){
     var_dump('parent'); # 生效
 
-    $runtime->fork(function(){
+    $runtime->child(function(){
         var_dump('parent-child'); # 生效
     });
 });

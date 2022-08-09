@@ -26,7 +26,7 @@ class RunTest extends BaseTestCase
             $this->write($file, $runtime->getId() . PHP_EOL);
         }, 3);
 
-        $this->runtime()->wait();
+        $this->runtime()->wait(null, null, true);
 
         $this->assertContainsHasAndRmCache(
             ['0', '1', '2', '3'],
@@ -55,7 +55,7 @@ class RunTest extends BaseTestCase
             $this->write($file, $runtime->getId() . PHP_EOL);
         }, 3);
 
-        $this->runtime()->wait();
+        $this->runtime()->wait(null, null, true);
 
         $this->assertContainsHasAndRmCache(
             ['0', '1', '2', '3'],
@@ -79,7 +79,7 @@ class RunTest extends BaseTestCase
             $this->write($file, $runtime->getPriority($runtime->getId()) . PHP_EOL);
         }, 2);
 
-        $this->runtime()->wait();
+        $this->runtime()->wait(null, null, true);
 
         $this->assertEqualsAndRmCache(
             ['0', '0', '0'],
@@ -100,7 +100,7 @@ class RunTest extends BaseTestCase
         $this->runtime()->run(function(Runtime $runtime) use ($file){
             $this->write($file, 'child' . $runtime->getId() . PHP_EOL);
 
-            $runtime->fork(function(Runtime $r) use ($file, $runtime){
+            $runtime->child(function(Runtime $r) use ($file, $runtime){
                 $this->write($file, 'child-child' . $runtime->getId() . $r->getId() . PHP_EOL);
             });
             exit;
@@ -108,14 +108,14 @@ class RunTest extends BaseTestCase
         },function (Runtime $runtime) use ($file){
             $this->write($file, 'parent' . ($id = $runtime->getId()) . PHP_EOL);
 
-            $runtime->fork(function(Runtime $r) use ($file, $id){
+            $runtime->child(function(Runtime $r) use ($file, $id){
                 $this->write($file, 'parent-child' . $id . $r->getId() . PHP_EOL);
                 exit;
             });
 
         }, 3);
 
-        $this->runtime()->wait();
+        $this->runtime()->wait(null, null, true);
 
         $this->assertContainsHasAndRmCache(
             ['parent0','parent-child04', 'child1', 'child2', 'child3'],
@@ -158,7 +158,7 @@ class RunTest extends BaseTestCase
 
         }, 1);
 
-        $this->runtime()->wait();
+        $this->runtime()->wait(null, null, true);
 
         $this->assertContainsHasAndRmCache(
             ['parent0','parent-parent00', 'parent-child01', 'child1', 'child-child11', 'child-parent10'],

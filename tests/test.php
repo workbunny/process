@@ -6,13 +6,13 @@ use WorkBunny\Process\Runtime;
 
 $p = new Runtime();
 
-//$p->fork(function(Process $process){
+//$p->child(function(Process $process){
 //    dump('child-' . $process->getId());
 //});
-//$p->fork(function(Process $process){
+//$p->child(function(Process $process){
 //    dump('child-' . $process->getId());
 //});
-//$p->fork(function(Process $process){
+//$p->child(function(Process $process){
 //    dump('child-' . $process->getId());
 //});
 
@@ -24,19 +24,19 @@ $p = new Runtime();
 
 
 $p->run(function(Runtime $process){
-    $process->fork(function(Runtime $p){
+    $process->child(function(Runtime $p){
         sleep(3);
         dump('child-' . $p->getId());
     });
 //    $p = new Process();
-//    $p->fork(function(Process $p) use($process){
+//    $p->child(function(Process $p) use($process){
 //        sleep(3);
 //        dump('child-' . $process->getId() . '-' . $p->getId());
 //    });
 //    $p->wait();
 },function (Runtime $process){
     dump('parent-' . $process->getId());
-    $process->fork(function(Runtime $p){
+    $process->child(function(Runtime $p){
         sleep(3);
         dump('child-' . $p->getId());
     });

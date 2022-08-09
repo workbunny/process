@@ -15,26 +15,51 @@ class BaseTestCase extends TestCase
      */
     public function setUp(): void
     {
+        $this->removeAllCaches();
         $this->_runtime = new Runtime();
         parent::setUp();
     }
 
     /**
+     * @param bool $reset
      * @return Runtime|null
      */
-    public function runtime(): ?Runtime
+    public function runtime(bool $reset = false): ?Runtime
     {
+        if($reset){
+            $this->_runtime = new Runtime();
+        }
         return $this->_runtime;
     }
 
-    public function write(string $file, string $content)
+    /**
+     * @param string $file
+     * @param string $content
+     * @return void
+     */
+    public function write(string $file, string $content): void
     {
-        file_put_contents(__DIR__ . '/cache/' . $file, $content, FILE_APPEND|LOCK_EX);
+        file_put_contents(__DIR__ . '/cache/' . $file . '.cache', $content, FILE_APPEND|LOCK_EX);
     }
 
-    public function read(string $file)
+    /**
+     * @param string $file
+     * @return string
+     */
+    public function read(string $file): string
     {
-        return file_exists($file = __DIR__ . '/cache/' . $file) ? file_get_contents($file) : '';
+        if(file_exists($file = __DIR__ . '/cache/' . $file . '.cache')){
+            return trim(file_get_contents($file));
+        }
+        throw new \RuntimeException('Cache Not Found : ' . $file);
+    }
+
+    /**
+     * @return void
+     */
+    public function removeAllCaches()
+    {
+        array_map('unlink', glob( __DIR__ . '/cache/*.cache'));
     }
 
     /**
@@ -42,20 +67,31 @@ class BaseTestCase extends TestCase
      */
     public function removeCache(string $file)
     {
-        if(file_exists($file = __DIR__ . '/cache/' . $file)){
+        if(file_exists($file = __DIR__ . '/cache/' . $file . '.cache')){
             @unlink($file);
         }
     }
 
+    /**
+     * @param $expected
+     * @param $actual
+     * @param string $file
+     * @return void
+     */
     public function assertEqualsAndRmCache($expected, $actual, string $file = ''): void
     {
         $this->removeCache($file);
         $this->assertEquals($expected, $actual);
     }
 
+    /**
+     * @param array $expected
+     * @param array $actual
+     * @param string $file
+     * @return void
+     */
     public function assertContainsHasAndRmCache(array $expected, array $actual, string $file = ''){
         $this->removeCache($file);
-
         $this->assertCount(count($expected), $actual);
         foreach ($expected as $value){
             $this->assertContains($value, $actual);

@@ -133,40 +133,59 @@ class Runtime
      */
     public function exit(int $status = 0, ?string $msg = null){
         if($msg){
-            echo $msg . PHP_EOL;
+            $this->echo($msg . PHP_EOL);
         }
         exit($status);
+    }
+
+    /**
+     * @return void
+     */
+    public function exitChildren(): void
+    {
+        if($this->isChild()){
+            $this->exit();
+        }
+    }
+
+    /**
+     * @param string $msg
+     * @return void
+     */
+    public function echo(string $msg){
+        echo $msg;
     }
 
     /**
      * 快速执行
      *
      * 该方法下父子Runtime没有优先级区分，除非自行设置，否则始终为0
-     * @param Closure $child = function(Runtime){}
-     * @param Closure|null $parent = function(Runtime){}
+     * @param Closure $childContext = function(Runtime){}
+     * @param Closure|null $parentContext = function(Runtime){}
      * @param int $forkCount
      * @return void
      */
-    public function run(Closure $child, ?Closure $parent = null, int $forkCount = 1): void
+    public function run(Closure $childContext, ?Closure $parentContext = null, int $forkCount = 1): void
     {
         if($forkCount < 1){
             throw new InvalidArgumentException('Fork count cannot be less than 1. ');
         }
 
         for($i = 1; $i <= $forkCount; $i ++){
-            $this->fork($child);
+            $this->child($childContext);
         }
 
-        $this->parent($parent);
+        $this->parent($parentContext);
     }
 
     /**
      * 父Runtime 监听
      * @param Closure|null $success = function(Runtime, status){}
      * @param Closure|null $error = function(Runtime, status){}
+     * @param bool $exitChild 是否结束子runtime
      * @return void
      */
-    public function wait(?Closure $success = null, ?Closure $error = null): void
+    public function wait(?Closure $success = null, ?Closure $error = null, bool $exitChild = false): void
     {
         if(!$this->isChild()){
             foreach ($this->_pidMap as $pid){
@@ -184,27 +203,30 @@ class Runtime
                 }
             }
         }
+        if($exitChild){
+            $this->exitChildren();
+        }
     }
 
     /**
      * 父Runtime执行
-     * @param Closure|null $handler = function(Runtime){}
+     * @param Closure|null $context = function(Runtime){}
      * @return void
      */
-    public function parent(?Closure $handler = null): void
+    public function parent(?Closure $context = null): void
     {
-        if(!$this->isChild() and $handler){
-            $handler($this);
+        if(!$this->isChild() and $context){
+            $context($this);
         }
     }
 
     /**
      * 创建一个子Runtime
-     * @param Closure $handler = function(Runtime){}
+     * @param Closure|null $context = function(Runtime){}
      * @param int $priority 默认 父子Runtime同为0，但父Runtime始终为0
      * @return void
      */
-    public function fork(Closure $handler, int $priority = 0): void
+    public function child(?Closure $context = null, int $priority = 0): void
     {
         if($id = $this->number()){
             // gc
@@ -238,15 +260,16 @@ class Runtime
                                 : $priority
                         );
                         $this->_pidMap = [];
-                        $handler($this);
+                        if($context){
+                            $context($this);
+                        }
                         break;
                     // 异常
                     default:
                         throw new RuntimeException('Fork process fail. ');
                 }
             }catch (\Throwable $throwable){
-                echo $throwable->getMessage();
-                exit(250);
+                $this->exit(250, $throwable->getMessage());
             }
         }
     }
