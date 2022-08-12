@@ -144,7 +144,7 @@ class ChildTest extends BaseTestCase
 
         $this->runtime()->wait(null, null, true);
 
-        $this->assertEqualsAndRmCache(
+        $this->assertContainsHasAndRmCache(
             ['1', '2'],
             explode(PHP_EOL, $this->read($file)),
             $file

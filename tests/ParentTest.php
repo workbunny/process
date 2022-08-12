@@ -22,15 +22,15 @@ class ParentTest extends BaseTestCase
 
         // 对照
         $this->runtime()->child();
-        $this->write($file, 'test' . PHP_EOL);
+        $this->write($file, $this->runtime()->getId() . PHP_EOL);
         $this->runtime()->wait(null, null, true);
-        $this->assertEqualsAndRmCache(['test', 'test'], explode(PHP_EOL, $this->read($file)), $file);
+        $this->assertContainsHasAndRmCache(['0', '1'], explode(PHP_EOL, $this->read($file)), $file);
 
         // 测试
         $this->runtime(true)->child();
         $this->runtime()->exitChildren();
-        $this->write($file, 'test');
-        $this->assertEqualsAndRmCache('test', $this->read($file), $file);
+        $this->write($file, (string)$this->runtime()->getId());
+        $this->assertEqualsAndRmCache('0', $this->read($file), $file);
 
 
     }
@@ -45,26 +45,26 @@ class ParentTest extends BaseTestCase
         $file = __FUNCTION__;
         // 对照组
         $this->runtime()->child();
-        $this->write($file, 'test' . PHP_EOL);
+        $this->write($file, $this->runtime()->getId() . PHP_EOL);
         $this->runtime()->wait(null, null, true);
-        $this->assertEqualsAndRmCache(['test', 'test'], explode(PHP_EOL, $this->read($file)), $file);
+        $this->assertContainsHasAndRmCache(['0', '1'], explode(PHP_EOL, $this->read($file)), $file);
 
         // 测试组-子上下文退出
         $this->runtime(true)->child(function(){
             $this->runtime()->exit();
         });
-        $this->write($file, 'test' . PHP_EOL);
         $this->runtime()->wait(null, null, true);
-        $this->assertEqualsAndRmCache('test', $this->read($file), $file);
+        $this->write($file, (string)$this->runtime()->getId());
+        $this->assertEqualsAndRmCache('0', $this->read($file), $file);
 
         // 测试组-子上下文退出后写入无效
         $this->runtime(true)->child(function() use ($file){
             $this->runtime()->exit();
-            $this->write($file, 'test' . PHP_EOL);
+            $this->write($file, $this->runtime()->getId() . PHP_EOL);
         });
-        $this->write($file, 'test' . PHP_EOL);
         $this->runtime()->wait(null, null, true);
-        $this->assertEqualsAndRmCache('test', $this->read($file), $file);
+        $this->write($file, (string)$this->runtime()->getId());
+        $this->assertEqualsAndRmCache('0', $this->read($file), $file);
     }
 
     /**
@@ -78,9 +78,9 @@ class ParentTest extends BaseTestCase
         $file = __FUNCTION__;
         // 对照组
         $this->runtime()->child();
-        $this->write($file, 'test' . PHP_EOL);
+        $this->write($file, $this->runtime()->getId() . PHP_EOL);
         $this->runtime()->wait(null, null, true);
-        $this->assertEqualsAndRmCache(['test', 'test'], explode(PHP_EOL, $this->read($file)), $file);
+        $this->assertContainsHasAndRmCache(['0', '1'], explode(PHP_EOL, $this->read($file)), $file);
 
         // 测试组
         $this->runtime(true)->child();
