@@ -9,9 +9,6 @@
     <a href="https://github.com/workbunny/process/actions">
         <img src="https://github.com/workbunny/process/actions/workflows/CI.yml/badge.svg" alt="Build Status">
     </a>
-    <a href="https://github.com/workbunny/process/releases">
-        <img alt="Latest Stable Version" src="http://poser.pugx.org/workbunny/process/v">
-    </a>
     <a href="https://github.com/workbunny/process/blob/main/composer.json">
         <img alt="PHP Version Require" src="http://poser.pugx.org/workbunny/process/require/php">
     </a>
