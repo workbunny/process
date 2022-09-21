@@ -127,6 +127,74 @@ class ChildTest extends BaseTestCase
     }
 
     /**
+     * 测试child的替换
+     * @covers \WorkBunny\Process\Runtime::child
+     * @covers \WorkBunny\Process\Runtime::exit
+     * @return void
+     */
+    public function testChildReplace()
+    {
+        $oldId = $this->runtime()->child(function (Runtime $runtime){});
+
+        $oldPid = null;
+        $this->runtime()->parent(function(Runtime $runtime) use ($oldId, &$oldPid){
+            $oldPid = $runtime->getPidMap()[$oldId];
+        });
+
+        $newId = $this->runtime()->child(
+            function (Runtime $runtime){},
+            0,
+            $oldId
+        );
+
+        $newPid = null;
+        $this->runtime()->parent(function(Runtime $runtime) use ($newId, &$newPid){
+            $newPid = $runtime->getPidMap()[$newId];
+        });
+
+        $this->runtime()->wait(null, null, true);
+
+        $this->assertEquals(true, $oldId === $newId);
+        $this->assertEquals(true, $oldPid !== $newPid);
+    }
+
+    /**
+     * 测试child的替换
+     * @covers \WorkBunny\Process\Runtime::child
+     * @covers \WorkBunny\Process\Runtime::exit
+     * @return void
+     */
+    public function testChildReplaceUseExit()
+    {
+        $oldId = $this->runtime()->child(function (Runtime $runtime) {
+            $runtime->exit();
+        });
+
+        $oldPid = null;
+        $this->runtime()->parent(function(Runtime $runtime) use ($oldId, &$oldPid){
+            $oldPid = $runtime->getPidMap()[$oldId];
+        });
+
+        $newId = $this->runtime()->child(
+            function (Runtime $runtime){
+                $runtime->exit();
+            },
+            0,
+            $oldId
+        );
+
+        $newPid = null;
+        $this->runtime()->parent(function(Runtime $runtime) use ($newId, &$newPid){
+            $newPid = $runtime->getPidMap()[$newId];
+        });
+
+        $this->runtime()->wait(null, null, true);
+
+        $this->assertEquals(true, $oldId === $newId);
+        $this->assertEquals(true, $oldPid !== $newPid);
+    }
+
+    /**
      * 每个child只输出一次
      * @return void
      */

@@ -179,9 +179,9 @@ class Runtime
     }
 
     /**
-     * 父Runtime 监听
-     * @param Closure|null $success = function(Runtime, status){}
-     * @param Closure|null $error = function(Runtime, status){}
+     * 父Runtime 阻塞监听
+     * @param Closure|null $success = function(id, pid, status){}
+     * @param Closure|null $error = function(id, pid, status){}
      * @param bool $exitChild 是否结束子runtime
      * @return void
      */
@@ -209,6 +209,36 @@ class Runtime
     }
 
     /**
+     * 父Runtime 非阻塞监听
+     * @param Closure|null $success = function(id, pid, status){}
+     * @param Closure|null $error = function(id, pid, status){}
+     * @param bool $exitChild 是否结束子runtime
+     * @return void
+     */
+    public function listen(?Closure $success = null, ?Closure $error = null, bool $exitChild = false): void
+    {
+        if(!$this->isChild()){
+            foreach ($this->_pidMap as $id => $pid){
+                $pid = pcntl_waitpid($pid, $status, WNOHANG);
+                if($pid > 0){
+                    if ($status !== 0) {
+                        if ($error){
+                            $error($id, $pid, $status);
+                        }
+                    }else{
+                        if($success){
+                            $success($id, $pid, $status);
+                        }
+                    }
+                }
+            }
+        }
+        if($exitChild){
+            $this->exitChildren();
+        }
+    }
+
+    /**
      * 父Runtime执行
      * @param Closure|null $context = function(Runtime){}
      * @return void
@@ -224,11 +254,13 @@ class Runtime
      * 创建一个子Runtime
      * @param Closure|null $context = function(Runtime){}
      * @param int $priority 默认 父子Runtime同为0，但父Runtime始终为0
-     * @return void
+     * @param int|null $id 该id的子Runtime如果存在则会创建新Runtime替换旧Runtime
+     * @return int
      */
-    public function child(?Closure $context = null, int $priority = 0): void
+    public function child(?Closure $context = null, int $priority = 0, ?int $id = null): int
     {
-        if($id = $this->number()){
+        // 创建子Runtime
+        if($id = ($id !== null) ? $id : $this->number()){
             // gc
             if(isset($this->getConfig()['pre_gc']) and boolval($this->getConfig()['pre_gc'])){
                 gc_collect_cycles();
@@ -247,6 +279,10 @@ class Runtime
                                 ? (int)($this->getConfig()['priority'][0])
                                 : 0
                         );
+                        // 杀死旧Runtime
+                        if($oldPid = ($this->_pidMap[$id] ?? null)){
+                            posix_kill($oldPid, SIGKILL);
+                        }
                         $this->_pidMap[$id] = $pid;
                         break;
                     // 子Runtime
@@ -272,6 +308,7 @@ class Runtime
                 $this->exit(250, $throwable->getMessage());
             }
         }
+        return $id;
     }
 
     /**

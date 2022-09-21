@@ -80,7 +80,7 @@ $p->wait(function(\WorkBunny\Process\Runtime $parent, int $status){
 
 |      方法名      |     作用范围      | 是否产生分叉 |                   描述                    |
 |:-------------:|:-------------:|:------:|:---------------------------------------:|
-|    child()    | parentContext |   √    |              分叉一个子Runtime               |
+|    child()    | parentContext |   √    |       分叉一个子Runtime / 替换一个子Runtime       |
 |     run()     | parentContext |   √    |             快速分叉N个子Runtime              |
 |    wait()     | parentContext |   ×    |             监听所有子Runtime状态              |
 |   parent()    | parentContext |   ×    |             为父Runtime增加回调响应             |
@@ -136,7 +136,6 @@ $p->child(function(\WorkBunny\Process\Runtime $runtime){
 });
 
 var_dump('parent'); # 打印两次
-
 ```
 
 ```php
@@ -150,11 +149,49 @@ $p->run(function (\WorkBunny\Process\Runtime $runtime){
 var_dump('parent'); # 打印5次
 ```
 
+- **child()** 函数可以进行替换子Runtime行为
+
+```php
+$p = new \WorkBunny\Process\Runtime();
+
+// 创建一个子Runtime
+// 假设父RuntimeID === 0，子RuntimeID === 1
+// 假设父RuntimePID === 99，子RuntimePID === 100
+$id = $p->child(function(\WorkBunny\Process\Runtime $runtime){
+    $runtime->getId(); // 假设 id === 1
+    $runtime->getPid(); // 假设 pid === 100
+});
+
+if($p->isChild()){
+    $id === 0; // $id 在子Runtime的上下文中始终为0
+    posix_getpid() === 100;
+}else{
+    $id === 1;// $id 在当前父Runtime的上下文中为1
+    posix_getpid() === 99;
+}
+
+// 对id === 1的子Runtime进行替换
+// 该用法会杀死原id下的子Runtime并新建Runtime替换它
+// 该方法并不会改变子Runtime的id，仅改变id对应的pid
+$newId = $p->child(function(\WorkBunny\Process\Runtime $runtime){
+    $runtime->getId(); # id === 1
+}, 0, $id);
+
+if($p->isChild()){
+    $id === $newId === 0;
+    posix_getpid() !== 100; // 子Runtime PID发生变化，不再是100
+    // 原PID === 100的子Runtime被kill
+}else{
+    $id === $newId === 1; // $id 没有发生变化
+    posix_getpid() === 99;
+}
+```
+
 - 如需在子Runtime中进行 **fork** 操作，请创建新的Runtime；**不建议过多调用，因为进程的开销远比线程大**
 
 ```php
 $p = new \WorkBunny\Process\Runtime();
-$p->child(function(\WorkBunny\Process\Runtime $runtime){
+$id = $p->child(function(\WorkBunny\Process\Runtime $runtime){
     var_dump($runtime->getId()); # id !== 0
     var_dump('old-child');
     
@@ -284,9 +321,32 @@ var_dump($p->getPid()); # 所有Runtime会输出
 
 ```php
 $p = new \WorkBunny\Process\Runtime();
-$p->wait(function(\WorkBunny\Process\Runtime $runtime, $status){
+
+// $id RuntimeID
+// $pid 进程PID
+// $status 进程退出状态
+$p->wait(function($id, $pid, $status){
     # 子Runtime正常退出时
-}, function(\WorkBunny\Process\Runtime $runtime, $status){
+}, function($id, $pid, $status){
+    # 子Runtime异常退出时
+});
+```
+
+- 非阻塞监听
+
+**注：该方法仅父Runtime生效**
+
+**注：该方法应配合event-loop的timer或者future进行监听**
+
+```php
+$p = new \WorkBunny\Process\Runtime();
+
+// $id RuntimeID
+// $pid 进程PID
+// $status 进程退出状态
+$p->listen(function($id, $pid, $status){
+    # 子Runtime正常退出时
+}, function($id, $pid, $status){
     # 子Runtime异常退出时
 });
 ```
