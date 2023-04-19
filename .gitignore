@@ -3,3 +3,4 @@
 /vendor
 composer.lock
 identifier.sqlite
+.phpunit.cache
