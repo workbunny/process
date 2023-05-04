@@ -12,24 +12,23 @@
   "authors": [
     {
       "name": "chaz6chez",
-      "email": "250220719@qq.com",
-      "homepage": "https://chaz6chez.cn",
-      "role": "Developer"
+      "email": "chaz6chez1993@outlook.com",
+      "homepage": "https://chaz6chez.cn"
     }
   ],
   "support": {
-    "email": "250220719@qq.com",
+    "email": "chaz6chez1993@outlook.com",
     "issues": "https://github.com/workbuunny/process/issues",
     "source": "https://github.com/workbuunny/process"
   },
   "require": {
-    "php": ">=7.4",
+    "php": "^7.4 | ^8.0",
     "ext-pcntl": "*",
     "ext-posix": "*"
   },
   "require-dev": {
-    "symfony/var-dumper": "^5.0",
-    "phpunit/phpunit": "^9.0"
+    "symfony/var-dumper": "^5.0 | ^6.0",
+    "phpunit/phpunit": "^9.0 | ^10.0"
   },
   "autoload": {
     "psr-4": {

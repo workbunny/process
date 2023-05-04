@@ -8,7 +8,7 @@ use WorkBunny\Process\Runtime;
 /**
  * @runTestsInSeparateProcesses
  */
-class RunTest extends BaseTestCase
+final class RunTest extends BaseTestCase
 {
     /**
      * 测试run

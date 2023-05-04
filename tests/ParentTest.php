@@ -8,7 +8,7 @@ use WorkBunny\Process\Runtime;
 /**
  * @runTestsInSeparateProcesses
  */
-class ParentTest extends BaseTestCase
+final class ParentTest extends BaseTestCase
 {
     /**
      * 测试exitChildren方法

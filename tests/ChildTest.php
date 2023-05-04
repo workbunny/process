@@ -8,7 +8,7 @@ use WorkBunny\Process\Runtime;
 /**
  * @runTestsInSeparateProcesses
  */
-class ChildTest extends BaseTestCase
+final class ChildTest extends BaseTestCase
 {
     /**
      * 测试获取子Runtime ID【在公共上下文中Exit】

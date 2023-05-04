@@ -1,5 +1,6 @@
 /.idea
 /.vscode
 /vendor
+/tests/cache
 composer.lock
 identifier.sqlite

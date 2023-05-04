@@ -1,16 +1,14 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * This file is part of workbunny.
  *
  * Redistributions of files must retain the above copyright notice.
  *
- * @author    chaz6chez<250220719@qq.com>
- * @copyright chaz6chez<250220719@qq.com>
+ * @author    chaz6chez<chaz6chez1993@outlook.com>
+ * @copyright chaz6chez<chaz6chez1993@outlook.com>
  * @link      https://github.com/workbunny/process
  * @license   https://github.com/workbunny/process/blob/main/LICENSE
  */
-declare(strict_types=1);
-
 namespace WorkBunny\Process;
 
 use Closure;
@@ -188,16 +186,16 @@ class Runtime
     public function wait(?Closure $success = null, ?Closure $error = null, bool $exitChild = false): void
     {
         if(!$this->isChild()){
-            foreach ($this->_pidMap as $pid){
+            foreach ($this->_pidMap as $id => $pid){
                 $pid = pcntl_waitpid($pid, $status, WUNTRACED);
                 if($pid > 0){
                     if ($status !== 0) {
                         if ($error){
-                            $error($this, $status);
+                            $error($id, $pid, $status);
                         }
                     }else{
                         if($success){
-                            $success($this, $status);
+                            $success($id, $pid, $status);
                         }
                     }
                 }
