@@ -39,7 +39,7 @@ class BaseTestCase extends TestCase
      */
     public function write(string $file, string $content): void
     {
-        file_put_contents(__DIR__ . '/cache/' . $file . '.cache', $content, FILE_APPEND|LOCK_EX);
+        file_put_contents(__DIR__ . "/$file.cache", $content, FILE_APPEND|LOCK_EX);
     }
 
     /**
@@ -48,7 +48,7 @@ class BaseTestCase extends TestCase
      */
     public function read(string $file): string
     {
-        if(file_exists($file = __DIR__ . '/cache/' . $file . '.cache')){
+        if(file_exists($file = __DIR__ . "/$file.cache")){
             return trim(file_get_contents($file));
         }
         throw new \RuntimeException('Cache Not Found : ' . $file);
@@ -59,7 +59,7 @@ class BaseTestCase extends TestCase
      */
     public function removeAllCaches()
     {
-        array_map('unlink', glob( __DIR__ . '/cache/*.cache'));
+        array_map('unlink', glob( __DIR__ . '/*.cache'));
     }
 
     /**
@@ -67,7 +67,7 @@ class BaseTestCase extends TestCase
      */
     public function removeCache(string $file)
     {
-        if(file_exists($file = __DIR__ . '/cache/' . $file . '.cache')){
+        if(file_exists($file = __DIR__ . "/$file.cache")){
             @unlink($file);
         }
     }
